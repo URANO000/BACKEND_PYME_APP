@@ -1,4 +1,8 @@
+using BusinessLogic.Interfaces;
+using BusinessLogic.Services;
 using DataAccess;
+using DataAccess.Repositories.Client;
+using DataAccess.Repositories.Product;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -9,6 +13,14 @@ builder.Services.AddControllers();
 
 //Dependency injection of DBCONTEXT
 builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("Context")));
+//Repositories, services...stuff
+builder.Services.AddScoped<IProductRepository, ProductRepository>();
+builder.Services.AddScoped<IProductService, ProductService>();
+//builder.Services.AddScoped<IOrdersService, OrdersService>();
+builder.Services.AddScoped<IClientRepository, ClientRepository>();
+builder.Services.AddScoped<IClientService, ClientService>();
+
+
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
