@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 
 namespace DataAccess.Models.Entities
@@ -6,10 +7,11 @@ namespace DataAccess.Models.Entities
     [Table("PRODUCT")]
     public class ProductDA
     {
+        [Key]
         [Column("product_id")]
         public int ProductId { get; set; }
         [Column("name")]
-        public string Name { get; set; } = string.Empty;
+        public required string Name { get; set; }
 
         [Column("price")]
         public decimal Price { get; set; }
@@ -17,12 +19,13 @@ namespace DataAccess.Models.Entities
         public decimal TaxPercentage { get; set; }
         [Column("image")]
         public string? Image { get; set; }
+        [Column("state")]
         public ProductState State { get; set; }
         //This is my foereign key
         [Column("category_id")]
         public int CategoryId { get; set; }
 
         //Here I am creating the navigation property  -MANY TO ONE
-        public required CategoryDA Category { get; set; }
+        public  CategoryDA Category { get; set; }
     }
 }

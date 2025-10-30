@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
@@ -10,6 +11,7 @@ namespace DataAccess.Models.Entities
     [Table("USERS")]
     public class UsersDA
     {
+        [Key]
         [Column("user_id")]
         public int UserId { get; set; }
         [Column("username")]
