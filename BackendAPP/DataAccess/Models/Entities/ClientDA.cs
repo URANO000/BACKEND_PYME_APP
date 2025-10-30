@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 
 namespace DataAccess.Models.Entities
@@ -6,8 +7,11 @@ namespace DataAccess.Models.Entities
     [Table("CLIENT")]
     public class ClientDA
     {
+        [Key]
         [Column("client_id")]
         public int ClientId { get; set; }
+        [Column("cedula")]
+        public string Cedula { get; set; }
         [Column("first_name")]
         public string? FirstName { get; set; }
         [Column("last_name")]
