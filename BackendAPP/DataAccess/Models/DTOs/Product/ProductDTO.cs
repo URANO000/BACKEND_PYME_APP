@@ -5,9 +5,10 @@ namespace DataAccess.Models.DTOs.Product
     public class ProductDTO
     {
         public int ProductId { get; set; }
-        public required string Name { get; set; }
+        public string Name { get; set; }
         public decimal Price { get; set; }
         public decimal TaxPercentage { get; set; }
+        public decimal Stock { get; set; }
         public string? Image { get; set; }
         public string State { get; set; }
 

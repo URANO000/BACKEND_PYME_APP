@@ -19,6 +19,7 @@ namespace DataAccess
         public DbSet<ClientDA> Clients { get; set; }
         public DbSet<RoleDA> Roles { get; set; }
         public DbSet<UsersDA> Users { get; set; }
+        public DbSet<OrderDetailDA> OrderDetails { get; set; }
 
         //This is to fix my state issue
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -28,6 +29,15 @@ namespace DataAccess
                 .Property(p => p.State)
                 .HasConversion<string>();
             base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<UsersDA>()
+            .HasOne(u => u.Role)
+            .WithMany(r => r.Users)
+            .HasForeignKey(u => u.RoleId);
+
+            modelBuilder.Entity<RoleDA>()
+            .Property(r => r.RoleName)
+            .HasConversion<string>();
         }
 
     }

@@ -15,11 +15,14 @@ namespace BackendAPP.Controllers
     public class ProductController : ControllerBase
     {
 
-        //  First thing to do is to call my DBCONTEXT
+        //  First thing to do is to call my service
         private readonly IProductService _productService;
-        public ProductController(IProductService productService)
+        //Call logger for basic logging!
+        private readonly ILogger<ProductController> _logger;
+        public ProductController(IProductService productService, ILogger<ProductController> logger)
         {
             _productService = productService;
+            _logger = logger;
         }
 
 
@@ -31,29 +34,46 @@ namespace BackendAPP.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<ProductDTO>>> GetAllProducts()
         {
-
-            var products = await _productService.GetAllProductsAsync();
-            return Ok(products);
+            try
+            {
+                var products = await _productService.GetAllProductsAsync();
+                _logger.LogInformation("All products hace been retrieved successfully");
+                return Ok(products);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Internal server error, something went wrong :(");
+                return StatusCode(500, new { message = "Error del servidor X_X" });
+            }
         }
 
         [HttpGet("{id}")]
         public async  Task<ActionResult <ProductDTO>> GetProductById(int id)
         {
-            //Call the service method to get the product by id
-            var product = await _productService.GetProductByIdAsync(id);
-
-            //Validation if product is null
-            if (product == null)
+            try
             {
-                return NotFound(new {message = "Producto no encontrado..."});
+                //Call the service method to get the product by id
+                var product = await _productService.GetProductByIdAsync(id);
+
+                //Validation if product is null
+                if (product == null)
+                {
+                    _logger.LogWarning("Product not found...");
+                    return NotFound(new { message = "Producto no encontrado..." });
+                }
+                return Ok(product);  //Returns my DTO 
+
             }
+            catch(Exception ex)
+            {
+                _logger.LogError(ex, $"Internal error, couldn't get product by id = {id}");
+                return StatusCode(500, new { message = "Error interno del servidor X_X"});
 
-
-            return Ok(product);  //Returns my DTO 
+            }
         }
 
         [HttpPost]
-        public async Task<ActionResult<ProductDTO>> CreateProduct([FromBody] CreateProductDTO productDTO)
+        public async Task<ActionResult<ProductDTO>> CreateProduct([FromForm] CreateProductDTO productDTO)
         {
             try
             {
@@ -70,7 +90,7 @@ namespace BackendAPP.Controllers
             }
         }
         [HttpPut("{id}")] //Need the id to know where to update
-        public async Task<IActionResult> UpdateProduct(int id, [FromBody] CreateProductDTO updatedProduct)
+        public async Task<IActionResult> UpdateProduct(int id, [FromForm] CreateProductDTO updatedProduct)
         {
             //Using try and catch to deal with the argument exceptions, instead returning HTTP response
             try
