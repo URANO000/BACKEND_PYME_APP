@@ -1,4 +1,5 @@
-﻿using DataAccess.Models.Entities;
+﻿using DataAccess.Models.DTOs.Helper;
+using DataAccess.Models.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,8 +12,18 @@ namespace DataAccess.Repositories.Client
     {
         Task<IEnumerable<ClientDA>> GetAllAsync();
         Task<ClientDA?> GetByIdAsync(int id);
-        Task CreateAsync(ClientDA product);
-        Task UpdateAsync(ClientDA product);
-        Task DeleteAsync(ClientDA product);
+        Task CreateAsync(ClientDA client);
+        Task UpdateAsync(ClientDA client);
+        Task DeleteAsync(ClientDA client);
+
+        //For pagination...filtering
+        Task<PagedResult<ClientDA>> GetFilteredAsync
+        (
+            string? search,
+            string? email,
+            string? lastName,
+            int pageNumber = 1,
+            int pageSize = 10
+        );
     }
 }

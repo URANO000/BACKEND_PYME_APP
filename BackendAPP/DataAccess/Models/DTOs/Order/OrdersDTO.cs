@@ -11,7 +11,7 @@ namespace DataAccess.Models.DTOs.Order
         public decimal Subtotal { get; set; }
         public decimal Tax { get; set; }
         public decimal Total { get; set; }
-        public required string State { get; set; } 
+        public string State { get; set; } 
 
         //User and Client details
         public ClientDTO Client { get; set; } = new ClientDTO();

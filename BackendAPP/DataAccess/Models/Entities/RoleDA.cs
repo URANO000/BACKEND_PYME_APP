@@ -13,9 +13,9 @@ namespace DataAccess.Models.Entities
     {
         [Key]
         [Column("role_id")]
-        public int roleId { get; set; }
+        public int RoleId { get; set; }
         [Column("role")]
-        public RoleName roleName { get; set; }
+        public RoleName RoleName { get; set; }
 
         //Collection
         public ICollection<UsersDA> Users { get; set; }

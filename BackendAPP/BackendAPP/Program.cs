@@ -2,6 +2,7 @@ using BusinessLogic.Interfaces;
 using BusinessLogic.Services;
 using DataAccess;
 using DataAccess.Repositories.Client;
+using DataAccess.Repositories.Orders;
 using DataAccess.Repositories.Product;
 using Microsoft.EntityFrameworkCore;
 
@@ -16,9 +17,12 @@ builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlSer
 //Repositories, services...stuff
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<IProductService, ProductService>();
-//builder.Services.AddScoped<IOrdersService, OrdersService>();
 builder.Services.AddScoped<IClientRepository, ClientRepository>();
-builder.Services.AddScoped<IClientService, ClientService>();
+builder.Services.AddScoped<ClientService>();
+builder.Services.AddScoped<IOrdersRepository, OrdersRepository>();
+builder.Services.AddScoped<IOrderDetailRepository, OrderDetailRepository>();
+builder.Services.AddScoped<OrdersService>();
+
 
 
 
@@ -36,6 +40,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseAuthorization();
+
+//Use static files
+app.UseStaticFiles();
 
 app.MapControllers();
 

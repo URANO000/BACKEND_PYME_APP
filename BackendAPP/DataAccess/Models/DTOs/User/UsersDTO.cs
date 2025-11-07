@@ -15,5 +15,6 @@ namespace DataAccess.Models.DTOs.User
 
         //Navigation
         public RoleDTO Role { get; set; } = new RoleDTO();
+
     }
 }
