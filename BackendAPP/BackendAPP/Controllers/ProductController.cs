@@ -3,6 +3,7 @@ using DataAccess;
 using DataAccess.Models.DTOs.Category;
 using DataAccess.Models.DTOs.Product;
 using DataAccess.Models.Entities;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -32,6 +33,7 @@ namespace BackendAPP.Controllers
          */
 
         [HttpGet]
+        [Authorize(Roles = "ADMINISTRADOR, VENTAS, OPERACIONES")]
         public async Task<ActionResult<IEnumerable<ProductDTO>>> GetAllProducts(
             [FromQuery] string? search,
             [FromQuery] int? categoryId,
@@ -65,6 +67,7 @@ namespace BackendAPP.Controllers
         }
 
         [HttpGet("{id}")]
+        [Authorize(Roles = "ADMINISTRADOR, VENTAS, OPERACIONES")]
         public async Task<ActionResult<ProductDTO>> GetProductById(int id)
         {
             try
@@ -90,6 +93,7 @@ namespace BackendAPP.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "ADMINISTRADOR")]
         public async Task<ActionResult<ProductDTO>> CreateProduct([FromForm] CreateProductDTO productDTO)
         {
             try
@@ -115,6 +119,7 @@ namespace BackendAPP.Controllers
             }
         }
         [HttpPut("{id}")] //Need the id to know where to update
+        [Authorize(Roles = "ADMINISTRADOR")]
         public async Task<IActionResult> UpdateProduct(int id, [FromForm] CreateProductDTO updatedProduct)
         {
             //Using try and catch to deal with the argument exceptions, instead returning HTTP response
@@ -143,6 +148,7 @@ namespace BackendAPP.Controllers
 
         //Delete method, my favorite... it's simple
         [HttpDelete("{id}")]
+        [Authorize(Roles = "ADMINISTRADOR")]
         public async Task<ActionResult> DeleteProduct(int id)
         {
             try

@@ -24,6 +24,6 @@ namespace DataAccess.Models.Entities
         public int RoleId { get; set; }
         
         //Navigation
-        public required RoleDA Role { get; set; }
+        public RoleDA Role { get; set; }
     }
 }
