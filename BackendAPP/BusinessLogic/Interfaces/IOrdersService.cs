@@ -9,7 +9,7 @@ namespace BusinessLogic.Interfaces
         Task<IEnumerable<OrdersDTO>> GetAllOrdersAsync();
         Task<OrdersDTO?> GetOrderByIdAsync(int id);
         Task<OrdersDTO> PlaceOrder(CreateOrdersDTO dto, int userId);
-        Task<OrdersDTO> UpdateAsync(int id, CreateOrdersDTO dto);
+        Task<OrdersDTO> UpdateAsync(int orderId,int userId, CreateOrdersDTO dto);
         Task DeleteOrderAsync(int id);
     }
 }

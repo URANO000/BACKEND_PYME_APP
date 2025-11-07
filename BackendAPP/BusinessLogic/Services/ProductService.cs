@@ -1,5 +1,6 @@
 ﻿using BusinessLogic.Interfaces;
 using DataAccess.Models.DTOs.Category;
+using DataAccess.Models.DTOs.Helper;
 using DataAccess.Models.DTOs.Product;
 using DataAccess.Models.Entities;
 using DataAccess.Repositories.Product;
@@ -18,20 +19,38 @@ namespace BusinessLogic.Services
         }
 
         //Here I implement the business logic methods by calling the repository methods
-        public async Task<IEnumerable<ProductDTO>> GetAllProductsAsync()
+        public async Task<PagedResult<ProductDTO>> GetAllProductsAsync(ProductFilterDTO filters)
         {
-            var products = await _productRepository.GetAllAsync();
-            return products.Select(p => new ProductDTO
+            var pagedProducts = await _productRepository.GetFilteredAsync(
+                filters.Search,
+                filters.CategoryId,
+                filters.MinPrice,
+                filters.MaxPrice,
+                filters.State,
+                filters.PageNumber,
+                filters.PageSize);
+
+            return new PagedResult<ProductDTO>
             {
-                ProductId = p.ProductId,
-                Name = p.Name,
-                Price = p.Price,
-                TaxPercentage = p.TaxPercentage,
-                Stock = p.Stock,
-                Image = p.Image,
-                State = p.State.ToString(),
-                Category = new CategoryDTO { CategoryId = p.Category.CategoryId, Name = p.Category.Name }
-            });
+                Items = pagedProducts.Items.Select(p => new ProductDTO
+                {
+                    ProductId = p.ProductId,
+                    Name = p.Name,
+                    Price = p.Price,
+                    TaxPercentage = p.TaxPercentage,
+                    Stock = p.Stock,
+                    Image = p.Image,
+                    State = p.State.ToString(),
+                    Category = new CategoryDTO
+                    {
+                        CategoryId = p.Category.CategoryId,
+                        Name = p.Category.Name
+                    }
+                }),
+                TotalCount = pagedProducts.TotalCount,
+                PageNumber = pagedProducts.PageNumber,
+                PageSize = pagedProducts.PageSize
+            };
         }
         //GetById method logic 
         public async Task<ProductDTO?> GetProductByIdAsync(int id)
@@ -102,9 +121,7 @@ namespace BusinessLogic.Services
                 Stock = productDTO.Stock,
                 Image = imagePath, // save only the URL/path
                 CategoryId = productDTO.CategoryId,
-                State = Enum.TryParse<ProductState>(productDTO.State, true, out var parsedState)
-                    ? parsedState
-                    : ProductState.ACTIVE
+                State = true // Default state to Active
             };
 
             await _productRepository.CreateAsync(product);
@@ -167,7 +184,16 @@ namespace BusinessLogic.Services
                 product.Image = $"/uploads/products/{fileName}";
             }
 
-            product.State = Enum.Parse<ProductState>(updatedProduct.State, true);
+            if (bool.TryParse(updatedProduct.State, out bool parsedState))
+            {
+                product.State = parsedState;
+            }
+            else
+            {
+                // Optionally, handle invalid state string (e.g., default to true or false, or throw an exception)
+                throw new ArgumentException("Estado del producto inválido. Debe ser 'true' o 'false'.", nameof(updatedProduct.State));
+            }
+
             product.Category = category;
             product.CategoryId = updatedProduct.CategoryId;
 

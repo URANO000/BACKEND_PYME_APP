@@ -24,11 +24,6 @@ namespace DataAccess
         //This is to fix my state issue
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            //Logic to alter state into string
-            modelBuilder.Entity<ProductDA>()
-                .Property(p => p.State)
-                .HasConversion<string>();
-            base.OnModelCreating(modelBuilder);
 
             modelBuilder.Entity<UsersDA>()
             .HasOne(u => u.Role)

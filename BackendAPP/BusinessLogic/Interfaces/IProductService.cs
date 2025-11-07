@@ -1,4 +1,5 @@
-﻿using DataAccess.Models.DTOs.Product;
+﻿using DataAccess.Models.DTOs.Helper;
+using DataAccess.Models.DTOs.Product;
 
 
 namespace BusinessLogic.Interfaces
@@ -6,7 +7,7 @@ namespace BusinessLogic.Interfaces
     public interface IProductService
     {
         //SOLID -> Single Responsibility Principle 
-        Task<IEnumerable<ProductDTO>> GetAllProductsAsync();
+        Task<PagedResult<ProductDTO>> GetAllProductsAsync(ProductFilterDTO dto);
         Task<ProductDTO?> GetProductByIdAsync(int id);
         Task<ProductDTO?> CreateProductAsync(CreateProductDTO dto);
         Task<ProductDTO?> UpdateProductAsync(int id, CreateProductDTO dto);

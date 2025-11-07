@@ -102,5 +102,37 @@ namespace BackendAPP.Controllers
 
             }
         }
+
+        [HttpPut("{orderId}/user/{userId}")]
+        public async Task<ActionResult> UpdateOrder(int orderId, int userId, [FromBody] CreateOrdersDTO dto)
+        {
+            if (dto == null)
+            {
+                _logger.LogWarning("UpdateOrder called with null DTO");
+                return BadRequest(new { message = "Datos de la orden inválidos." });
+            }
+
+            try
+            {
+                var updatedOrder = await _ordersService.UpdateAsync(orderId, userId, dto);
+
+                if (updatedOrder == null)
+                {
+                    _logger.LogWarning($"No order found with ID {orderId}.");
+                    return NotFound(new { message = $"No se encontró la orden con ID {orderId}." });
+                }
+
+                _logger.LogInformation($"Order {orderId} updated by user {userId}.");
+                return Ok(updatedOrder);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error updating order {orderId} by user {userId}: {ex.Message}");
+                return StatusCode(500, new { message = "Error al actualizar la orden.", error = ex.Message });
+            }
+        }
+
+        //An example usage for this one is  PUT /api/orders/5/user/2
+
     }
 }

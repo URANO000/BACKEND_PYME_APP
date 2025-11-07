@@ -123,7 +123,7 @@ namespace BusinessLogic.Services
                 var product = await _productRepository.GetByIdAsync(item.ProductId)
                     ?? throw new KeyNotFoundException($"Producto con ID {item.ProductId} no encontrado.");
 
-                // Precio base sin descuento
+                //Precio base sin descuento
                 decimal precioSinDescuento = product.Price * item.Quantity;
 
                 //I asume the discount is input as a whole number
@@ -161,7 +161,7 @@ namespace BusinessLogic.Services
                 Subtotal = subtotal,
                 Tax = tax,
                 Total = total,
-                State = "PENDING",
+                State = "CONFIRMADA",
                 ClientId = dto.ClientId,
                 UserId = userId
             };
@@ -174,7 +174,7 @@ namespace BusinessLogic.Services
             {
                 var product = await _productRepository.GetByIdAsync(detail.ProductId)
                     ?? throw new KeyNotFoundException($"Producto con ID {detail.ProductId} no encontrado.");
-
+                //If stock is insufficient, throw error, since you can't sell more than you have
                 if (product.Stock < detail.Quantity)
                     throw new InvalidOperationException($"Stock insuficiente para el producto '{product.Name}'.");
 
@@ -220,9 +220,107 @@ namespace BusinessLogic.Services
             };
         }
 
-        public Task<OrdersDTO> UpdateAsync(int id, CreateOrdersDTO dto)
+        public async Task<OrdersDTO> UpdateAsync(int orderId, int userID, CreateOrdersDTO dto)
         {
-            throw new NotImplementedException();
+            //First things first, validate if the order exists
+            var existingOrder = await _ordersRepository.GetByIdAsync(orderId);
+            if (existingOrder == null)
+            {
+                throw new KeyNotFoundException("Order not found");
+            }
+
+            //If order details don't exist or are 0, throw error
+            if (dto.OrderDetails == null || dto.OrderDetails.Count == 0)
+            {
+                throw new ArgumentException("El pedido debe tener al menos un detalle.");
+            }
+
+            //Now we get the old details, storing the object in this variable
+            var existingDetails = await _orderDetailRepository.GetByOrderIdAsync(orderId);
+
+            //For each to restore the previous details
+            foreach (var existingDetail in existingDetails)
+            {
+                var product = await _productRepository.GetByIdAsync(existingDetail.ProductId);
+                if (product != null)
+                {
+                    product.Stock += (int)existingDetail.Quantity; //Restore stock
+                    await _productRepository.UpdateAsync(product);
+                }
+            }
+
+            //Now we remove the existing detail
+            foreach (var existingDetail in existingDetails)
+            {
+                await _orderDetailRepository.DeleteAsync(existingDetail);
+            }
+
+            //Now we have to make sure we calculate the right subtotals
+            var (subtotal, tax, total) = await CalculateTotalAsync(dto.OrderDetails);
+
+            //And we update the order
+            existingOrder.Subtotal = subtotal;
+            existingOrder.Tax = tax;
+            existingOrder.Total = total;
+            existingOrder.ClientId = dto.ClientId;
+            existingOrder.UserId = userID;
+            existingOrder.State = existingOrder.State;
+
+            //I'll track last modified
+            existingOrder.Date = DateTime.UtcNow;
+
+            //Now I need to add the new order details and update the stock if need be
+            foreach (var detail in dto.OrderDetails)
+            {
+                var product = await _productRepository.GetByIdAsync(detail.ProductId);
+
+                //Validate the product even exists
+                if (product == null)
+                {
+                    throw new KeyNotFoundException($"Producto con ID {detail.ProductId} no fue encontrado :(");
+                }
+
+                //If now the client wants more products than ther ARE, then send out an error
+                if (product.Stock < detail.Quantity)
+                {
+                    throw new InvalidOperationException($"Stock insuficiente para el producto que desea comprar! {product.Name}");
+                }
+
+                //Now if the stock is suficient, then lower all stock
+                product.Stock -= (int)detail.Quantity;
+                await _productRepository.UpdateAsync(product);
+
+                //Now finally insert and update properly
+                var orderDetail = new OrderDetailDA
+                {
+                    OrderId = existingOrder.OrderId,
+                    ProductId = product.ProductId,
+                    Quantity = detail.Quantity,
+                    UnitPrice = product.Price,
+                    Discount = detail.Discount
+                };
+
+
+                //Save in db
+                await _orderDetailRepository.CreateAsync(orderDetail);
+
+            }
+
+            //Out of foreach, we need to return the DTO
+            return new OrdersDTO
+            {
+                OrderId = existingOrder.OrderId,
+                Date = existingOrder.Date,
+                Subtotal = subtotal,
+                Tax = existingOrder.Tax,
+                Total = existingOrder.Total,
+                State =  existingOrder.State,
+                Client =  new ClientDTO {
+                    ClientId = existingOrder.ClientId,
+                    FirstName = existingOrder.Client.FirstName,
+                    LastName = existingOrder.Client.LastName},
+                User = new UsersDTO { UserId = existingOrder.UserId }
+            };
         }
     }
 }

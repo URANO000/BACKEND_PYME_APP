@@ -1,4 +1,5 @@
-﻿using DataAccess.Models.Entities;
+﻿using DataAccess.Models.DTOs.Helper;
+using DataAccess.Models.Entities;
 
 
 namespace DataAccess.Repositories.Product
@@ -12,14 +13,17 @@ namespace DataAccess.Repositories.Product
         Task DeleteAsync(ProductDA product);
         Task<CategoryDA?> GetCategoryByIdAsync(int categoryId);
 
-        //Filtering methods
-        Task<ProductDA?> GetByNameAsync(string name);
-
-        //Filter by price range (minPrice to maxPrice)
-        Task<IEnumerable<ProductDA>> GetByPriceRangeAsync(decimal minPrice, decimal maxPrice);
-
-        //Order by price (ascending or descending)
-        Task<IEnumerable<ProductDA>> GetAllOrderedByPriceAsync(bool ascending = true);
+        //This is for filtering
+        Task<PagedResult<ProductDA>> GetFilteredAsync
+        (
+            string? search,
+            int? categoryId,
+            decimal? minPrice,
+            decimal? maxPrice,
+            bool? state,
+            int pageNumber =1,
+            int pageSize = 10
+        );
 
     }
 }

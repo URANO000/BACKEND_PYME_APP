@@ -19,8 +19,9 @@ namespace DataAccess.Models.Entities
         [Column("total")]
         public decimal Total { get; set; }
         [Column("state")]
-        public String State { get; set; }
+        public String? State { get; set; }
         [ForeignKey("client_id")]
+
         [Column("client_id")]
         public int ClientId { get; set; }
 

@@ -32,23 +32,40 @@ namespace BackendAPP.Controllers
          */
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<ProductDTO>>> GetAllProducts()
+        public async Task<ActionResult<IEnumerable<ProductDTO>>> GetAllProducts(
+            [FromQuery] string? search,
+            [FromQuery] int? categoryId,
+            [FromQuery] decimal? minPrice,
+            [FromQuery] decimal? maxPrice,
+            [FromQuery] bool? state,
+            [FromQuery] int pageNumber = 1,
+            [FromQuery] int pageSize = 10)
         {
             try
             {
-                var products = await _productService.GetAllProductsAsync();
-                _logger.LogInformation("All products hace been retrieved successfully");
+                var filters = new ProductFilterDTO
+                {
+                    Search = search,
+                    CategoryId = categoryId,
+                    MinPrice = minPrice,
+                    MaxPrice = maxPrice,
+                    State = state,
+                    PageNumber = pageNumber,
+                    PageSize = pageSize
+                };
+
+                var products = await _productService.GetAllProductsAsync(filters);
+                _logger.LogInformation("Products retrieved succesfully :)");
                 return Ok(products);
-            }
-            catch (Exception ex)
+            }catch (Exception ex)
             {
-                _logger.LogError(ex, "Internal server error, something went wrong :(");
-                return StatusCode(500, new { message = "Error del servidor X_X" });
+                _logger.LogError(ex, "Internal server error X_X");
+                return StatusCode(500, new { message = "Error interno del servidor" });
             }
         }
 
         [HttpGet("{id}")]
-        public async  Task<ActionResult <ProductDTO>> GetProductById(int id)
+        public async Task<ActionResult<ProductDTO>> GetProductById(int id)
         {
             try
             {
@@ -64,10 +81,10 @@ namespace BackendAPP.Controllers
                 return Ok(product);  //Returns my DTO 
 
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 _logger.LogError(ex, $"Internal error, couldn't get product by id = {id}");
-                return StatusCode(500, new { message = "Error interno del servidor X_X"});
+                return StatusCode(500, new { message = "Error interno del servidor X_X" });
 
             }
         }
@@ -78,15 +95,23 @@ namespace BackendAPP.Controllers
             try
             {
                 var result = await _productService.CreateProductAsync(productDTO);
+                _logger.LogInformation("Product created successfully!!");
                 return CreatedAtAction(nameof(GetProductById), new { id = result.ProductId }, result);
             }
             catch (ArgumentNullException ex)
             {
+                _logger.LogWarning("Bad request while creating product: {Message}", ex.Message);
                 return BadRequest(new { message = ex.Message });
             }
             catch (KeyNotFoundException ex)
             {
+                _logger.LogWarning("Related entity not found while creating product: {Message}", ex.Message);
                 return NotFound(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Internal server error while creating product");
+                return StatusCode(500, new { message = "Error interno del servidor X_X" });
             }
         }
         [HttpPut("{id}")] //Need the id to know where to update
@@ -96,15 +121,23 @@ namespace BackendAPP.Controllers
             try
             {
                 var updated = await _productService.UpdateProductAsync(id, updatedProduct);
+                _logger.LogInformation("Product with id {Id} updated successfully!!!", id);
                 return Ok(updated);
             }
             catch (KeyNotFoundException ex)
             {
+                _logger.LogWarning("Product not found while updating: {Message}", ex.Message);
                 return NotFound(new { message = ex.Message });
             }
             catch (ArgumentNullException ex)
             {
+                _logger.LogWarning("Bad request while updating product: {Message}", ex.Message);
                 return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Internal server error while updating product with id {Id}", id);
+                return StatusCode(500, new { message = "Error interno del servidor X_X" });
             }
         }
 
@@ -115,11 +148,18 @@ namespace BackendAPP.Controllers
             try
             {
                 await _productService.DeleteProductAsync(id);
+                _logger.LogInformation("Product with id {Id} deleted successfully!!!", id);
                 return Ok(new { message = "Producto eliminado!" });
             }
             catch (KeyNotFoundException ex)
             {
+                _logger.LogWarning("Product not found while deleting: {Message}", ex.Message);
                 return NotFound(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Internal server error while deleting product with id {Id}", id);
+                return StatusCode(500, new { message = "Error interno del servidor X_X" });
             }
         }
     }

@@ -8,10 +8,10 @@ namespace DataAccess.Models.Entities
 {
    public enum RoleName
     {
-        ADMINISTRATOR,
-        SALES,
-        OPERATIONS,
-        CLIENT,
+        ADMINISTRADOR,
+        VENTAS,
+        OPERACIONES,
+        CLIENTE,
         AUDITOR
     }
 }

@@ -22,7 +22,7 @@ namespace DataAccess.Models.Entities
         [Column("image")]
         public string? Image { get; set; }
         [Column("state")]
-        public ProductState State { get; set; }
+        public bool State { get; set; }
         //This is my foereign key
         [Column("category_id")]
         public int CategoryId { get; set; }
