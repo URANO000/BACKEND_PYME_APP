@@ -59,7 +59,7 @@ namespace BusinessLogic.Services
                     Role = new RoleDTO
                     {
                         RoleId = order.User.Role.RoleId,
-                        RoleName = order.User.Role.RoleName.ToString()
+                        RoleName = order.User.Role.RoleName
                     }
                 }
             };
@@ -94,7 +94,7 @@ namespace BusinessLogic.Services
                     Role = new RoleDTO
                     {
                         RoleId = o.User.Role.RoleId,
-                        RoleName = o.User.Role.RoleName.ToString()
+                        RoleName = o.User.Role.RoleName
                     }
                 }
             });

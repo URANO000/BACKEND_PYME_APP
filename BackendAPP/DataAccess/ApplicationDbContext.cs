@@ -30,9 +30,6 @@ namespace DataAccess
             .WithMany(r => r.Users)
             .HasForeignKey(u => u.RoleId);
 
-            modelBuilder.Entity<RoleDA>()
-            .Property(r => r.RoleName)
-            .HasConversion<string>();
         }
 
     }

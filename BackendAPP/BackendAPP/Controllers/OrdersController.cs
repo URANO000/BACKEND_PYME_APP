@@ -1,12 +1,15 @@
-﻿using DataAccess;
-using DataAccess.Models.DTOs.Order;
+﻿using BusinessLogic.Services;
+using DataAccess;
 using DataAccess.Models.DTOs;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using DataAccess.Models.DTOs.Client;
+using DataAccess.Models.DTOs.Order;
 using DataAccess.Models.DTOs.User;
 using DataAccess.Models.Entities;
-using BusinessLogic.Services;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 
 namespace BackendAPP.Controllers
 {
@@ -27,6 +30,7 @@ namespace BackendAPP.Controllers
 
         //Now we can start with our methods
         [HttpGet]
+        [Authorize(Roles = "ADMINISTRADOR, VENTAS, OPERACIONES")]
         public async Task<ActionResult<IEnumerable<OrdersDTO>>> GetAllOrders()
         {
             try
@@ -44,6 +48,7 @@ namespace BackendAPP.Controllers
 
         //Get by id
         [HttpGet("{id}")]
+        [Authorize(Roles = "ADMINISTRADOR, VENTAS, OPERACIONES")]
         public async Task<ActionResult<OrdersDTO>> GetOrderById(int id)
         {
             try
@@ -66,11 +71,22 @@ namespace BackendAPP.Controllers
 
         //Now we create an order
         [HttpPost]
+        [Authorize(Roles = "ADMINISTRADOR, VENTAS")]
         public async Task<ActionResult> CreateOrder([FromBody] CreateOrdersDTO order)
         {
             try
             {
-                int userId = 1; //In real scenario, get from auth context
+                //I extract the user from JWT
+                var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier)
+                                          ?? User.FindFirstValue(JwtRegisteredClaimNames.Sub);
+
+                if (userIdClaim == null)
+                {
+                    _logger.LogWarning("No user ID found in token.");
+                    return Unauthorized(new { message = "No se pudo identificar el usuario autenticado :(" });
+                }
+
+                int userId = int.Parse(userIdClaim);
                 OrdersDTO createdOrder = await _ordersService.PlaceOrder(order, userId);
                 _logger.LogInformation("Order was created succesfully :)");
                 return Ok(createdOrder);
@@ -85,6 +101,7 @@ namespace BackendAPP.Controllers
 
         //Delete...finally...finally
         [HttpDelete("{id}")]
+        [Authorize(Roles = "ADMINISTRADOR")]
         public async Task<ActionResult> DeleteOrder(int id)
         {
             //First verify that the id matches an order
@@ -103,8 +120,9 @@ namespace BackendAPP.Controllers
             }
         }
 
-        [HttpPut("{orderId}/user/{userId}")]
-        public async Task<ActionResult> UpdateOrder(int orderId, int userId, [FromBody] CreateOrdersDTO dto)
+        [HttpPut("{orderId}")]
+        [Authorize(Roles = "ADMINISTRADOR, VENTAS")]
+        public async Task<ActionResult> UpdateOrder(int orderId, [FromBody] CreateOrdersDTO dto)
         {
             if (dto == null)
             {
@@ -114,6 +132,16 @@ namespace BackendAPP.Controllers
 
             try
             {
+                var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier)
+                          ?? User.FindFirstValue(JwtRegisteredClaimNames.Sub);
+
+                if (userIdClaim == null)
+                {
+                    return Unauthorized(new { message = "No se pudo identificar el usuario autenticado." });
+                }
+
+                int userId = int.Parse(userIdClaim);
+
                 var updatedOrder = await _ordersService.UpdateAsync(orderId, userId, dto);
 
                 if (updatedOrder == null)
@@ -127,7 +155,7 @@ namespace BackendAPP.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Error updating order {orderId} by user {userId}: {ex.Message}");
+                _logger.LogError($"Error updating order {orderId}: {ex.Message}");
                 return StatusCode(500, new { message = "Error al actualizar la orden.", error = ex.Message });
             }
         }
