@@ -153,8 +153,24 @@ namespace BusinessLogic.Services
             if (dto.OrderDetails == null || dto.OrderDetails.Count == 0)
                 throw new ArgumentException("El pedido debe tener al menos un detalle.");
 
-            var (subtotal, tax, total) = await CalculateTotalAsync(dto.OrderDetails);
+            //VALIDATE STOCK FIRST - before creating anything...yes...tyes
+            var productValidations = new List<(ProductDA product, CreateOrderDetailDTO detail)>();
 
+            foreach (var detail in dto.OrderDetails)
+            {
+                var product = await _productRepository.GetByIdAsync(detail.ProductId)
+                    ?? throw new KeyNotFoundException($"Producto con ID {detail.ProductId} no encontrado.");
+
+                if (product.Stock < detail.Quantity)
+                {
+                    throw new InvalidOperationException($"Stock insuficiente para el producto '{product.Name}'.");
+                }
+
+                productValidations.Add((product, detail));
+            }
+
+            //Now that we know all products have sufficient stock, create the order
+            var (subtotal, tax, total) = await CalculateTotalAsync(dto.OrderDetails);
             var order = new OrdersDA
             {
                 Date = DateTime.UtcNow,
@@ -165,19 +181,13 @@ namespace BusinessLogic.Services
                 ClientId = dto.ClientId,
                 UserId = userId
             };
-
             await _ordersRepository.CreateAsync(order);
 
             var orderDetailsCreated = new List<OrderDetailDTO>();
 
-            foreach (var detail in dto.OrderDetails)
+            //Process the validated products
+            foreach (var (product, detail) in productValidations)
             {
-                var product = await _productRepository.GetByIdAsync(detail.ProductId)
-                    ?? throw new KeyNotFoundException($"Producto con ID {detail.ProductId} no encontrado.");
-                //If stock is insufficient, throw error, since you can't sell more than you have
-                if (product.Stock < detail.Quantity)
-                    throw new InvalidOperationException($"Stock insuficiente para el producto '{product.Name}'.");
-
                 product.Stock -= (int)detail.Quantity;
                 await _productRepository.UpdateAsync(product);
 
@@ -189,7 +199,6 @@ namespace BusinessLogic.Services
                     UnitPrice = product.Price,
                     Discount = detail.Discount
                 };
-
                 await _orderDetailRepository.CreateAsync(orderDetail);
 
                 orderDetailsCreated.Add(new OrderDetailDTO
@@ -199,7 +208,6 @@ namespace BusinessLogic.Services
                     {
                         ProductId = product.ProductId,
                         Name = product.Name
-
                     },
                     Quantity = orderDetail.Quantity,
                     UnitPrice = orderDetail.UnitPrice,
