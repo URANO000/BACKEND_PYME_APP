@@ -7,6 +7,7 @@ namespace BackendAPP.Controllers
 {
     [Route("api/[controller]/[action]")]
     [ApiController]
+    
     public class ClientController : ControllerBase
     {
         //First I call dbConext to use it in my methods
