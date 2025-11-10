@@ -94,23 +94,33 @@ namespace BusinessLogic.Services
 
             if (productDTO.ImageFile != null && productDTO.ImageFile.Length > 0)
             {
-                // Ensure uploads folder exists
-                var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "products");
-                if (!Directory.Exists(uploadsFolder))
-                    Directory.CreateDirectory(uploadsFolder);
-
-                // Generate unique file name
-                var fileName = Guid.NewGuid().ToString() + Path.GetExtension(productDTO.ImageFile.FileName);
-                var filePath = Path.Combine(uploadsFolder, fileName);
-
-                // Save the image
-                using (var stream = new FileStream(filePath, FileMode.Create))
+                try
                 {
-                    await productDTO.ImageFile.CopyToAsync(stream);
-                }
+                    // Ensure uploads folder exists
+                    var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "products");
+                    if (!Directory.Exists(uploadsFolder))
+                        Directory.CreateDirectory(uploadsFolder);
 
-                // Save the relative path (to be served statically)
-                imagePath = $"/uploads/products/{fileName}";
+                    // Generate unique file name
+                    var fileName = Guid.NewGuid().ToString() + Path.GetExtension(productDTO.ImageFile.FileName);
+                    var filePath = Path.Combine(uploadsFolder, fileName);
+
+                    // Save the image with proper file handling
+                    using (var stream = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.None))
+                    {
+                        await productDTO.ImageFile.CopyToAsync(stream);
+                        await stream.FlushAsync(); // Ensure data is written to disk
+                    }
+
+                    // Save the relative path (to be served statically)
+                    imagePath = $"/uploads/products/{fileName}";
+                }
+                catch (Exception ex)
+                {
+                    // Log the exception
+                    Console.WriteLine($"Error saving image: {ex.Message}");
+                    throw new Exception("Error al guardar la imagen del producto", ex);
+                }
             }
 
             var product = new ProductDA
@@ -150,57 +160,90 @@ namespace BusinessLogic.Services
             if (updatedProduct == null)
                 throw new ArgumentNullException(nameof(updatedProduct), "Datos del producto no pueden ser nulos!");
 
-            //Validate if producto exists
+            // Validate if producto exists
             var product = await _productRepository.GetByIdAsync(id);
             if (product == null)
                 throw new KeyNotFoundException("Producto no encontrado!");
 
-            //Validate if category exists
+            // Validate if category exists
             var category = await _productRepository.GetCategoryByIdAsync(updatedProduct.CategoryId);
             if (category == null)
                 throw new KeyNotFoundException("Categoría no encontrada!");
 
-            //Update every field
+            // Store old image path for cleanup
+            string oldImagePath = product.Image;
+
+            // Update fields
             product.Name = updatedProduct.Name;
             product.Price = updatedProduct.Price;
             product.TaxPercentage = updatedProduct.TaxPercentage;
             product.Stock = updatedProduct.Stock;
 
-
+            // Handle image upload
             if (updatedProduct.ImageFile != null && updatedProduct.ImageFile.Length > 0)
             {
-                var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "products");
-                if (!Directory.Exists(uploadsFolder))
-                    Directory.CreateDirectory(uploadsFolder);
-
-                var fileName = Guid.NewGuid().ToString() + Path.GetExtension(updatedProduct.ImageFile.FileName);
-                var filePath = Path.Combine(uploadsFolder, fileName);
-
-                using (var stream = new FileStream(filePath, FileMode.Create))
+                try
                 {
-                    await updatedProduct.ImageFile.CopyToAsync(stream);
-                }
+                    var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "products");
+                    if (!Directory.Exists(uploadsFolder))
+                        Directory.CreateDirectory(uploadsFolder);
 
-                product.Image = $"/uploads/products/{fileName}";
+                    var fileName = Guid.NewGuid().ToString() + Path.GetExtension(updatedProduct.ImageFile.FileName);
+                    var filePath = Path.Combine(uploadsFolder, fileName);
+
+                    // Use async file operations and ensure proper disposal
+                    using (var stream = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.None))
+                    {
+                        await updatedProduct.ImageFile.CopyToAsync(stream);
+                        await stream.FlushAsync(); // Ensure data is written
+                    }
+
+                    // Only update the image path after successful save
+                    product.Image = $"/uploads/products/{fileName}";
+
+                    // Optional: Delete old image after new one is saved
+                    if (!string.IsNullOrEmpty(oldImagePath) && oldImagePath != product.Image)
+                    {
+                        var oldFilePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", oldImagePath.TrimStart('/'));
+                        if (File.Exists(oldFilePath))
+                        {
+                            try
+                            {
+                                File.Delete(oldFilePath);
+                            }
+                            catch (Exception ex)
+                            {
+                                // Log but don't fail the operation
+                                Console.WriteLine($"Failed to delete old image: {ex.Message}");
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // Log the exception
+                    Console.WriteLine($"Error saving image: {ex.Message}");
+                    throw new Exception("Error al guardar la imagen del producto", ex);
+                }
             }
 
+            // Parse state
             if (bool.TryParse(updatedProduct.State, out bool parsedState))
             {
                 product.State = parsedState;
             }
             else
             {
-                // Optionally, handle invalid state string (e.g., default to true or false, or throw an exception)
                 throw new ArgumentException("Estado del producto inválido. Debe ser 'true' o 'false'.", nameof(updatedProduct.State));
             }
 
-            product.Category = category;
             product.CategoryId = updatedProduct.CategoryId;
+            // Don't set product.Category directly - let EF handle the relationship
 
-            //Save changes to db
+            // Save changes to db
             await _productRepository.UpdateAsync(product);
 
-            //Mapping back to DTO to return this
+            // Mapping back to DTO
             return new ProductDTO
             {
                 ProductId = product.ProductId,

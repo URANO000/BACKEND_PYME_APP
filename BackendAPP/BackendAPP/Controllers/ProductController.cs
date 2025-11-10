@@ -119,7 +119,7 @@ namespace BackendAPP.Controllers
             }
         }
         [HttpPut("{id}")] //Need the id to know where to update
-        [Authorize(Roles = "ADMINISTRADOR")]
+        [Authorize(Roles = "ADMINISTRADOR, OPERACIONES")]
         public async Task<IActionResult> UpdateProduct(int id, [FromForm] CreateProductDTO updatedProduct)
         {
             //Using try and catch to deal with the argument exceptions, instead returning HTTP response

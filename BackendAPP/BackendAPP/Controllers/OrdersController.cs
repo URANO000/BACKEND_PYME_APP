@@ -121,7 +121,7 @@ namespace BackendAPP.Controllers
         }
 
         [HttpPut("{orderId}")]
-        [Authorize(Roles = "ADMINISTRADOR, VENTAS")]
+        [Authorize(Roles = "ADMINISTRADOR")]
         public async Task<ActionResult> UpdateOrder(int orderId, [FromBody] CreateOrdersDTO dto)
         {
             if (dto == null)
