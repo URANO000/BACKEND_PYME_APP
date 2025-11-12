@@ -12,7 +12,7 @@ namespace DataAccess.Repositories.Orders
         //Here I'll define the methods for managing orders
         Task CreateAsync(OrdersDA order);
         Task<OrdersDA?> GetByIdAsync(int id);
-        Task<IEnumerable<OrdersDA>> GetAllAsync();
+        Task<IEnumerable<OrdersDA?>> GetAllAsync();
         Task UpdateAsync(OrdersDA order);
         Task DeleteAsync(int id);
 

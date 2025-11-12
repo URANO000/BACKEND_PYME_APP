@@ -56,6 +56,8 @@ namespace BackendAPP.Controllers
                     PageSize = pageSize
                 };
 
+      
+
                 var products = await _productService.GetAllProductsAsync(filters);
                 _logger.LogInformation("Products retrieved succesfully :)");
                 return Ok(products);
@@ -99,6 +101,7 @@ namespace BackendAPP.Controllers
             try
             {
                 var result = await _productService.CreateProductAsync(productDTO);
+                _logger.LogInformation("This is the img file", productDTO.ImageFile);
                 _logger.LogInformation("Product created successfully!!");
                 return CreatedAtAction(nameof(GetProductById), new { id = result.ProductId }, result);
             }

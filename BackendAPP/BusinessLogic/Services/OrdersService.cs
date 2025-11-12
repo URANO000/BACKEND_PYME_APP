@@ -1,4 +1,5 @@
 ﻿using BusinessLogic.Interfaces;
+using DataAccess.Models.DTOs.Category;
 using DataAccess.Models.DTOs.Client;
 using DataAccess.Models.DTOs.Order;
 using DataAccess.Models.DTOs.Product;
@@ -61,7 +62,27 @@ namespace BusinessLogic.Services
                         RoleId = order.User.Role.RoleId,
                         RoleName = order.User.Role.RoleName
                     }
-                }
+                },
+                OrderDetails = order.OrderDetails.Select(od => new OrderDetailDTO
+                {
+                    OrderDetailId = od.OrderDetailId,
+                    Quantity = od.Quantity,
+                    UnitPrice = od.UnitPrice,
+                    Discount = od.Discount,
+                    Product = new ProductDTO
+                    {
+                        ProductId = od.Product.ProductId,
+                        Name = od.Product.Name,
+                        Price = od.Product.Price,
+                        Stock = od.Product.Stock,
+                        State = od.Product.State.ToString(),
+                        Category = new CategoryDTO
+                        {
+                            CategoryId = od.Product.Category.CategoryId,
+                            Name = od.Product.Category.Name
+                        }
+                    }
+                }).ToList()
             };
         }
 
@@ -275,7 +296,7 @@ namespace BusinessLogic.Services
             existingOrder.State = existingOrder.State;
 
             //I'll track last modified
-            existingOrder.Date = DateTime.UtcNow;
+            existingOrder.Date = DateTime.Now;
 
             //Now I need to add the new order details and update the stock if need be
             foreach (var detail in dto.OrderDetails)
@@ -313,6 +334,7 @@ namespace BusinessLogic.Services
                 await _orderDetailRepository.CreateAsync(orderDetail);
 
             }
+            var orderDetails = await _orderDetailRepository.GetByOrderIdAsync(existingOrder.OrderId);
 
             //Out of foreach, we need to return the DTO
             return new OrdersDTO

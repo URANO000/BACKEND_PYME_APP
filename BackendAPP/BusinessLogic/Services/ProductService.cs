@@ -18,6 +18,9 @@ namespace BusinessLogic.Services
             _productRepository = productRepository;
         }
 
+        //This is just get all but not paged
+
+
         //Here I implement the business logic methods by calling the repository methods
         public async Task<PagedResult<ProductDTO>> GetAllProductsAsync(ProductFilterDTO filters)
         {
@@ -90,27 +93,33 @@ namespace BusinessLogic.Services
             if (category == null)
                 throw new KeyNotFoundException("Categoría no encontrada!");
 
+            //After this, I will print the img URL
+            Console.WriteLine("img value: ", productDTO.ImageFile);
+
             string imagePath = null;
 
             if (productDTO.ImageFile != null && productDTO.ImageFile.Length > 0)
             {
                 try
                 {
-                    // Ensure uploads folder exists
+                    //Ensure uploads folder exists
                     var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "products");
                     if (!Directory.Exists(uploadsFolder))
                         Directory.CreateDirectory(uploadsFolder);
 
-                    // Generate unique file name
+                    //Generate unique file name
                     var fileName = Guid.NewGuid().ToString() + Path.GetExtension(productDTO.ImageFile.FileName);
                     var filePath = Path.Combine(uploadsFolder, fileName);
 
-                    // Save the image with proper file handling
+                    //Save the image with proper file handling
                     using (var stream = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.None))
                     {
                         await productDTO.ImageFile.CopyToAsync(stream);
                         await stream.FlushAsync(); // Ensure data is written to disk
                     }
+
+                    //After conversion, let's see the value of our image
+                    Console.WriteLine("Converted image: ", imagePath);
 
                     // Save the relative path (to be served statically)
                     imagePath = $"/uploads/products/{fileName}";

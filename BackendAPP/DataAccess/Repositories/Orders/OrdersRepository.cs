@@ -28,7 +28,7 @@ namespace DataAccess.Repositories.Orders
             }
         }
 
-        public async Task<IEnumerable<OrdersDA>> GetAllAsync()
+        public async Task<IEnumerable<OrdersDA?>> GetAllAsync()
         {
             return await _context.Orders
                 .Include(o => o.OrderDetails)
@@ -36,7 +36,6 @@ namespace DataAccess.Repositories.Orders
                 .Include(o => o.User)
                     .ThenInclude(u => u.Role)
                 .ToListAsync();
-
         }
 
         public async Task<OrdersDA?> GetByIdAsync(int id)
@@ -44,6 +43,7 @@ namespace DataAccess.Repositories.Orders
             return await _context.Orders
                 .Include(o => o.OrderDetails!)
                     .ThenInclude(od => od.Product)
+                        .ThenInclude(p => p.Category)
                 .Include(o => o.Client)
                 .Include(o => o.User)
                     .ThenInclude(u => u.Role)
