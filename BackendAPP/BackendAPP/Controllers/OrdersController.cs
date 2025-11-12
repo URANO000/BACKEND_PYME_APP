@@ -161,6 +161,37 @@ namespace BackendAPP.Controllers
         }
 
         //An example usage for this one is  PUT /api/orders/5/user/2
+        //calculate details for live calculation of details
+        [HttpPost]
+        [Authorize(Roles = "ADMINISTRADOR, VENTAS")]
+        public async Task<ActionResult<object>> CalculateTotal([FromBody] List<CreateOrderDetailDTO> orderDetails)
+        {
+            if (orderDetails == null || !orderDetails.Any())
+            {
+                return BadRequest("Debe incluir al menos un detalle de pedido para calcular el total...");
+            }
 
+            try
+            {
+                var (subtotal, impuesto, total) = await _ordersService.CalculateTotalAsync(orderDetails);
+                _logger.LogInformation("Detail calculated successfully");
+
+                return Ok(new
+                {
+                    Subtotal = subtotal,
+                    Impuesto = impuesto,
+                    Total = total
+                });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error calculating");
+                return StatusCode(500, $"Error al calcular el total: {ex.Message}");
+            }
+        }
     }
 }

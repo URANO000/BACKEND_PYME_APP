@@ -16,5 +16,9 @@ namespace DataAccess.Models.DTOs.Order
         //User and Client details
         public ClientDTO Client { get; set; } = new ClientDTO();
         public UsersDTO User { get; set; } = new UsersDTO();
+
+        //Just to see the productb..b..g.
+
+        public List<OrderDetailDTO> OrderDetails { get; set; }
     }
 }

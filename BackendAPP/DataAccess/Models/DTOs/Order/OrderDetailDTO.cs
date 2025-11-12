@@ -14,7 +14,6 @@ namespace DataAccess.Models.DTOs.Order
         public decimal Discount { get; set; }
 
         //Database relations
-        public OrdersDTO Order { get; set; } = new OrdersDTO();
         public ProductDTO Product { get; set; } = new ProductDTO { Category = new CategoryDTO(), State = string.Empty };
     }
 }
