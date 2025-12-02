@@ -19,6 +19,27 @@ namespace BusinessLogic.Services
         }
 
         //This is just get all but not paged
+        public async Task<IEnumerable<ProductDTO>> GetAllNonPaged()
+        {
+            var products = await _productRepository.GetAllAsync();
+            return products.Select(p => new ProductDTO
+            {
+                ProductId = p.ProductId,
+                Name = p.Name,
+                Price = p.Price,
+                TaxPercentage = p.TaxPercentage,
+                Stock = p.Stock,
+                Image = p.Image,
+                State = p.State.ToString(),
+                Category = new CategoryDTO
+                {
+                    CategoryId = p.Category.CategoryId,
+                    Name = p.Category.Name
+                }
+
+            });
+
+        }
 
 
         //Here I implement the business logic methods by calling the repository methods

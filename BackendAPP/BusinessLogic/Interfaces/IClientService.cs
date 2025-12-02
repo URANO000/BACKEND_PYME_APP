@@ -9,6 +9,7 @@ namespace BusinessLogic.Interfaces
     {
         //SOLID -> Single Responsibility Principle 
         Task<PagedResult<ClientDTO>> GetAllClientsAsync(ClientFilterDTO dto);
+        Task<IEnumerable<ClientDTO>> GetAllNonPaged();
         Task<ClientDTO?> GetClientByIdAsync(int id);
         Task<ClientDTO?> CreateClientAsync(CreateClientDTO dto);
         Task<ClientDTO?> UpdateClientAsync(int id, CreateClientDTO dto);

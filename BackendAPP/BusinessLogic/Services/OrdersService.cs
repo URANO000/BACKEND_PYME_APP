@@ -6,6 +6,7 @@ using DataAccess.Models.DTOs.Product;
 using DataAccess.Models.DTOs.Role;
 using DataAccess.Models.DTOs.User;
 using DataAccess.Models.Entities;
+using DataAccess.Repositories.Client;
 using DataAccess.Repositories.Orders;
 using DataAccess.Repositories.Product;
 
@@ -18,11 +19,13 @@ namespace BusinessLogic.Services
         private readonly IOrdersRepository _ordersRepository;
         private readonly IProductRepository _productRepository;
         private readonly IOrderDetailRepository _orderDetailRepository;
-        public OrdersService(IOrdersRepository ordersRepository, IProductRepository productRepository, IOrderDetailRepository orderDetailRepository)
+        private readonly IClientRepository _clientRepository;
+        public OrdersService(IOrdersRepository ordersRepository, IProductRepository productRepository, IOrderDetailRepository orderDetailRepository, IClientRepository clientRepository)
         {
             _ordersRepository = ordersRepository;
             _productRepository = productRepository;
             _orderDetailRepository = orderDetailRepository;
+            _clientRepository = clientRepository;
         }
 
         //Here I start with my logic methods
@@ -48,6 +51,7 @@ namespace BusinessLogic.Services
                     ClientId = order.Client.ClientId,
                     FirstName = order.Client.FirstName,
                     LastName = order.Client.LastName,
+                    Cedula = order.Client.Cedula,
                     Email = order.Client.Email,
                     Phone = order.Client.Phone,
                     Address = order.Client.Address
@@ -194,7 +198,7 @@ namespace BusinessLogic.Services
             var (subtotal, tax, total) = await CalculateTotalAsync(dto.OrderDetails);
             var order = new OrdersDA
             {
-                Date = DateTime.UtcNow,
+                Date = DateTime.Now,
                 Subtotal = subtotal,
                 Tax = tax,
                 Total = total,
@@ -249,7 +253,7 @@ namespace BusinessLogic.Services
             };
         }
 
-        public async Task<OrdersDTO> UpdateAsync(int orderId, int userID, CreateOrdersDTO dto)
+        public async Task<OrdersDTO> UpdateAsync(int orderId, int userID, UpdateOrdersDTO dto)
         {
             //First things first, validate if the order exists
             var existingOrder = await _ordersRepository.GetByIdAsync(orderId);
@@ -293,7 +297,7 @@ namespace BusinessLogic.Services
             existingOrder.Total = total;
             existingOrder.ClientId = dto.ClientId;
             existingOrder.UserId = userID;
-            existingOrder.State = existingOrder.State;
+            existingOrder.State = dto.State;
 
             //I'll track last modified
             existingOrder.Date = DateTime.Now;
@@ -334,6 +338,13 @@ namespace BusinessLogic.Services
                 await _orderDetailRepository.CreateAsync(orderDetail);
 
             }
+
+            //Reload nv properties so it doesn't return null anymore
+            var updatedClient = await _clientRepository.GetByIdAsync(dto.ClientId);
+            if (updatedClient == null)
+            {
+                throw new KeyNotFoundException($"Cliente con ID {dto.ClientId} no fue encontrado.");
+            }
             var orderDetails = await _orderDetailRepository.GetByOrderIdAsync(existingOrder.OrderId);
 
             //Out of foreach, we need to return the DTO
@@ -346,9 +357,11 @@ namespace BusinessLogic.Services
                 Total = existingOrder.Total,
                 State =  existingOrder.State,
                 Client =  new ClientDTO {
-                    ClientId = existingOrder.ClientId,
-                    FirstName = existingOrder.Client.FirstName,
-                    LastName = existingOrder.Client.LastName},
+                    ClientId = updatedClient.ClientId, //Use the newly loaded client
+                    FirstName = updatedClient.FirstName,
+                    Cedula = updatedClient.Cedula,
+                    LastName = updatedClient.LastName
+                },
                 User = new UsersDTO { UserId = existingOrder.UserId }
             };
         }

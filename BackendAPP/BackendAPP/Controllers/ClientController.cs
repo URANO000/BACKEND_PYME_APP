@@ -1,4 +1,5 @@
-﻿using BusinessLogic.Services;
+﻿using BusinessLogic.Interfaces;
+using BusinessLogic.Services;
 using DataAccess.Models.DTOs.Client;
 using Microsoft.AspNetCore.Mvc;
 
@@ -11,14 +12,31 @@ namespace BackendAPP.Controllers
     public class ClientController : ControllerBase
     {
         //First I call dbConext to use it in my methods
-        private readonly ClientService _clientService;
+        private readonly IClientService _clientService;
         //I call the logger
         private readonly ILogger<ClientController> _logger;
-        public ClientController(ClientService clientService, ILogger<ClientController> logger)
+        public ClientController(IClientService clientService, ILogger<ClientController> logger)
         {
 
             _clientService = clientService;
             _logger = logger;
+        }
+        //Non paged get
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<ClientDTO>>> GetAllNonPaged()
+        {
+            try
+            {
+                var clients = await _clientService.GetAllNonPaged();
+                _logger.LogInformation("Non paged clients retrieved successfully");
+                return Ok(clients);
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving all clients non paged");
+                return StatusCode(500, new { message = "Error interno del servidor al obtener los clientes" });
+            }
         }
 
         //Now I can create my HTTP methods

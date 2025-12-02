@@ -1,4 +1,5 @@
-﻿using BusinessLogic.Services;
+﻿using BusinessLogic.Interfaces;
+using BusinessLogic.Services;
 using DataAccess;
 using DataAccess.Models.DTOs;
 using DataAccess.Models.DTOs.Client;
@@ -18,7 +19,7 @@ namespace BackendAPP.Controllers
     public class OrdersController : ControllerBase
     {
         //First we need to call our service
-        private readonly OrdersService _ordersService;
+        private readonly IOrdersService _ordersService;
         //Then reference our logger!
         private readonly ILogger<OrdersController> _logger;
 
@@ -122,7 +123,7 @@ namespace BackendAPP.Controllers
 
         [HttpPut("{orderId}")]
         [Authorize(Roles = "ADMINISTRADOR")]
-        public async Task<ActionResult> UpdateOrder(int orderId, [FromBody] CreateOrdersDTO dto)
+        public async Task<ActionResult> UpdateOrder(int orderId, [FromBody] UpdateOrdersDTO dto)
         {
             if (dto == null)
             {
