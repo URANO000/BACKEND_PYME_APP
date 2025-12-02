@@ -3,9 +3,9 @@ namespace DataAccess.Models.DTOs.Role
 {
     public class RoleDTO
     {
-        public int roleId { get; set; }
+        public int RoleId { get; set; }
 
-        public string roleName { get; set; }  //Instead of the enum
+        public string RoleName { get; set; }  //Instead of the enum
 
     }
 }

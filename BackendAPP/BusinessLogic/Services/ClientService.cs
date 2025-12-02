@@ -1,12 +1,9 @@
 ﻿using BusinessLogic.Interfaces;
 using DataAccess.Models.DTOs.Client;
+using DataAccess.Models.DTOs.Helper;
 using DataAccess.Models.Entities;
 using DataAccess.Repositories.Client;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
 
 namespace BusinessLogic.Services
 {
@@ -21,8 +18,7 @@ namespace BusinessLogic.Services
             _clientRepository = clientRespository;
         }
 
-        //Implement the methods by calling the repository methods
-        public async Task<IEnumerable<ClientDTO>> GetAllClientsAsync()
+        public async Task<IEnumerable<ClientDTO>> GetAllNonPaged()
         {
             var clients = await _clientRepository.GetAllAsync();
             return clients.Select(c => new ClientDTO
@@ -35,6 +31,35 @@ namespace BusinessLogic.Services
                 Phone = c.Phone,
                 Address = c.Address
             });
+        }
+
+        //Implement the methods by calling the repository methods
+        public async Task<PagedResult<ClientDTO>> GetAllClientsAsync(ClientFilterDTO filters)
+        {
+            var pagedClients = await _clientRepository.GetFilteredAsync(
+                filters.Search,
+                filters.Email,
+                filters.LastName,
+                filters.PageNumber,
+                filters.PageSize
+                );
+
+            return new PagedResult<ClientDTO>
+            {
+                Items = pagedClients.Items.Select(c => new ClientDTO
+                {
+                    ClientId = c.ClientId,
+                    Cedula = c.Cedula,
+                    FirstName = c.FirstName,
+                    LastName = c.LastName,
+                    Email = c.Email,
+                    Phone = c.Phone,
+                    Address = c.Address
+                }),
+                TotalCount = pagedClients.TotalCount,
+                PageNumber = pagedClients.PageNumber,
+                PageSize = pagedClients.PageSize
+            };
         }
 
         //Implement get by id
@@ -121,6 +146,8 @@ namespace BusinessLogic.Services
             //Now that we've verified everything, we have to update the values of client
             client.FirstName = updatedClient.FirstName;
             client.LastName = updatedClient.LastName;
+            client.Cedula = updatedClient.Cedula;
+            client.Email = updatedClient.Email;
             client.Phone = updatedClient.Phone;
             client.Address = updatedClient.Address;
 

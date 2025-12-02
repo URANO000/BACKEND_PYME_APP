@@ -1,4 +1,5 @@
-﻿using DataAccess.Models.Entities;
+﻿using DataAccess.Models.DTOs.Helper;
+using DataAccess.Models.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace DataAccess.Repositories.Client
@@ -37,6 +38,42 @@ namespace DataAccess.Repositories.Client
         {
             _context.Clients.Remove(client);
             await _context.SaveChangesAsync();
+        }
+
+        //Implement get by filtered async
+        public async Task<PagedResult<ClientDA>> GetFilteredAsync(
+            string? search,
+            string? email,
+            string? lastName,
+            int pageNumber = 1,
+            int pageSize = 10)
+        {
+            var query = _context.Clients.AsQueryable();
+            if (!string.IsNullOrEmpty(search))
+                query = query.Where(c => c.FirstName.Contains(search) || c.LastName.Contains(search) || c.Cedula.Contains(search));
+
+            if (!string.IsNullOrEmpty(email))
+                query = query.Where(c => c.Email.Contains(email));
+
+
+            if (!string.IsNullOrEmpty(lastName))
+                query = query.Where(c => c.LastName.Contains(lastName));
+
+            var totalCount = await query.CountAsync();
+
+            var clients = await query
+                .OrderBy(c => c.ClientId)
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return new PagedResult<ClientDA>
+            {
+                Items = clients,
+                TotalCount = totalCount,
+                PageNumber = pageNumber,
+                PageSize = pageSize
+            };
         }
     }
 }

@@ -20,9 +20,10 @@ namespace DataAccess.Models.Entities
         public string? Email { get; set; }
         [Column("password")]
         public string? Password { get; set; }
-        public int roleId { get; set; }
+        [Column("role_id")]
+        public int RoleId { get; set; }
         
         //Navigation
-        public required RoleDA Role { get; set; }
+        public RoleDA Role { get; set; }
     }
 }

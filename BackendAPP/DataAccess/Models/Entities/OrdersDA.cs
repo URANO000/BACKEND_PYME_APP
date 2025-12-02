@@ -19,8 +19,9 @@ namespace DataAccess.Models.Entities
         [Column("total")]
         public decimal Total { get; set; }
         [Column("state")]
-        public OrderState State { get; set; }
+        public String? State { get; set; }
         [ForeignKey("client_id")]
+
         [Column("client_id")]
         public int ClientId { get; set; }
 
@@ -29,8 +30,11 @@ namespace DataAccess.Models.Entities
         public int UserId { get; set; }
 
         //Navigation
-        public  ClientDA Client { get; set; }
-        public  UsersDA User { get; set; }
+        public  ClientDA? Client { get; set; }
+        public  UsersDA? User { get; set; }
+
+        //Collection navigation property linked with order details  - ONE TO MANY
+        public ICollection<OrderDetailDA>? OrderDetails { get; set; }
 
     }
 }

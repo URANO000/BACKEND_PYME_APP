@@ -6,10 +6,14 @@ namespace BusinessLogic.Interfaces
 {
     public interface IOrdersService
     {
-        Task<IEnumerable<OrdersDTO>> GetAllAsync();
-        Task<OrdersDTO?> GetByIdAsync(int id);
-        Task CreateAsync(CreateOrdersDTO dto);
-        Task UpdateAsync(int id, CreateOrdersDTO dto);
-        Task DeleteAsync(int id);
+        //SOLID -> Single Responsibility Principle 
+        Task<IEnumerable<OrdersDTO>> GetAllOrdersAsync();
+        Task<OrdersDTO?> GetOrderByIdAsync(int id);
+        Task<OrdersDTO> PlaceOrder(CreateOrdersDTO dto, int userId);
+        Task<OrdersDTO> UpdateAsync(int orderId,int userId, UpdateOrdersDTO dto);
+        Task DeleteOrderAsync(int id);
+
+        //Calculate totals
+        Task<(decimal subtotal, decimal impuesto, decimal total)> CalculateTotalAsync(List<CreateOrderDetailDTO> orderDetails);
     }
 }
