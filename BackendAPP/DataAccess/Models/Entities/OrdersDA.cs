@@ -30,8 +30,8 @@ namespace DataAccess.Models.Entities
         public int UserId { get; set; }
 
         //Navigation
-        public  ClientDA Client { get; set; }
-        public  UsersDA User { get; set; }
+        public  ClientDA? Client { get; set; }
+        public  UsersDA? User { get; set; }
 
         //Collection navigation property linked with order details  - ONE TO MANY
         public ICollection<OrderDetailDA>? OrderDetails { get; set; }

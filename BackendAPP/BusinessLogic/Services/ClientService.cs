@@ -18,6 +18,21 @@ namespace BusinessLogic.Services
             _clientRepository = clientRespository;
         }
 
+        public async Task<IEnumerable<ClientDTO>> GetAllNonPaged()
+        {
+            var clients = await _clientRepository.GetAllAsync();
+            return clients.Select(c => new ClientDTO
+            {
+                ClientId = c.ClientId,
+                Cedula = c.Cedula,
+                FirstName = c.FirstName,
+                LastName = c.LastName,
+                Email = c.Email,
+                Phone = c.Phone,
+                Address = c.Address
+            });
+        }
+
         //Implement the methods by calling the repository methods
         public async Task<PagedResult<ClientDTO>> GetAllClientsAsync(ClientFilterDTO filters)
         {

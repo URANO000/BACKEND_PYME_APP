@@ -30,7 +30,24 @@ namespace BackendAPP.Controllers
         //Now I can create my API methods
         /* Note: Using ASYNC because database operations can be time-consuming. A task is a type of promise 
          * Note 2: I will be using Dtos as not to return nested object that can create circular references
+         * 
          */
+        //Get non paged
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<ProductDTO>>> GetAllNonPaged()
+        {
+            try
+            {
+                var products = await _productService.GetAllNonPaged();
+                _logger.LogInformation("All products retrieved successfully");
+                return Ok(products);
+
+            }catch(Exception ex)
+            {
+                _logger.LogError(ex, "Could not retrieve non paged products");
+                return StatusCode(500, new { message = "No se pudieron consultar los productos" });
+            }
+        }
 
         [HttpGet]
         [Authorize(Roles = "ADMINISTRADOR, VENTAS, OPERACIONES")]

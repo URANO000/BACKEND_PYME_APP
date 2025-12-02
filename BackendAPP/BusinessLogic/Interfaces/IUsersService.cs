@@ -4,6 +4,7 @@ namespace BusinessLogic.Interfaces
 {
     public interface IUsersService
     {
+        //SOLID -> Single Responsibility Principle 
         //Get all users
         Task<IEnumerable<UsersDTO>> GetAllUsersAsync();
         //Get user by id
