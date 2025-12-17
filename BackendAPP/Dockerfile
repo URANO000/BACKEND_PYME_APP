@@ -1,14 +1,19 @@
 # Build Stage
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
-WORKDIR /app
+WORKDIR /src
 
-# Copy csproj and restore
-COPY BackendAPP.csproj ./
+# Copy the whole BackendAPP folder (because project is nested)
+COPY . .
+
+# Go into the project subfolder (where csproj actually is)
+WORKDIR /src/BackendAPP
+
+# Restore
 RUN dotnet restore
 
-# Copy everything and publish
-COPY . ./
-RUN dotnet publish -c Release -o out
+# Publish
+RUN dotnet publish -c Release -o /app/out
+
 
 # Runtime Stage
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
@@ -16,7 +21,7 @@ WORKDIR /app
 
 COPY --from=build /app/out ./
 
-# Render provides PORT environment variable
+# PORT comes from Render
 ENV ASPNETCORE_URLS=http://0.0.0.0:${PORT}
 
 EXPOSE 8080
